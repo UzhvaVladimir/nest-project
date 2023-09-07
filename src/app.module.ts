@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import * as process from 'process';
+import { User } from './users/users.model'
+import { RolesModule } from './roles/roles.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -21,15 +22,17 @@ import * as process from 'process';
       ssl: true,
       dialectOptions: {
         ssl: true && {
-          require: true
-        }
+          require: true,
+        },
       },
-      models: [],
+      models: [ User ],
       autoLoadModels: true,
     }),
     UsersModule,
+    RolesModule,
+    AuthModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
