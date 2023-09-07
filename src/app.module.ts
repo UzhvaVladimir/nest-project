@@ -6,6 +6,8 @@ import * as process from 'process';
 import { User } from './users/users.model'
 import { RolesModule } from './roles/roles.module';
 import { AuthModule } from './auth/auth.module';
+import { Role } from "./roles/roles.model";
+import { UserRoles } from "./roles/user-roles.model";
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { AuthModule } from './auth/auth.module';
           require: true,
         },
       },
-      models: [ User ],
+      models: [ User, Role, UserRoles ],
       autoLoadModels: true,
     }),
     UsersModule,
