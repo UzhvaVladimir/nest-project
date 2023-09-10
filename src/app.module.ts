@@ -8,12 +8,18 @@ import { RolesModule } from './roles/roles.module';
 import { AuthModule } from './auth/auth.module';
 import { Role } from "./roles/roles.model";
 import { UserRoles } from "./roles/user-roles.model";
+import {BotsModule} from "./bots/bots.module";
+
 
 @Module({
   imports: [
+
     ConfigModule.forRoot({
       envFilePath: '.env',
     }),
+
+    BotsModule,
+
     SequelizeModule.forRoot({
       dialect: 'postgres',
       host: process.env.PG_HOST,
