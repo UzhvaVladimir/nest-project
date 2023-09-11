@@ -1,6 +1,7 @@
 import { Body, Controller, Post, ValidationPipe } from "@nestjs/common";
 import { ChatCompletionApiService } from "./chat-completion-api.service";
 import { GetChatCompletionAnswerInputDTO } from "./model/chat-completion.answer.dto";
+import { BotService } from "../bots/bots.service";
 
 @Controller('chat-completion-api')
 export class ChatCompletionApiController {
