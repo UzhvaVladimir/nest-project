@@ -9,6 +9,8 @@ import { AuthModule } from './auth/auth.module';
 import { Role } from "./roles/roles.model";
 import { UserRoles } from "./roles/user-roles.model";
 import {BotsModule} from "./bots/bots.module";
+import { LogsBotModule } from './logs_bot/logs_bot.module';
+import { ChatCompletionApiModule } from './chat-completion-api/chat-completion-api.module';
 
 
 @Module({
@@ -17,8 +19,6 @@ import {BotsModule} from "./bots/bots.module";
     ConfigModule.forRoot({
       envFilePath: '.env',
     }),
-
-    BotsModule,
 
     SequelizeModule.forRoot({
       dialect: 'postgres',
@@ -39,6 +39,9 @@ import {BotsModule} from "./bots/bots.module";
     UsersModule,
     RolesModule,
     AuthModule,
+    BotsModule,
+    LogsBotModule,
+    ChatCompletionApiModule,
   ],
   controllers: [],
   providers: [],
