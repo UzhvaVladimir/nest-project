@@ -1,11 +1,12 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, ValidationPipe } from "@nestjs/common";
 import * as process from 'process';
-import { LogsBotService } from "../logs_bot/logs_bot.service";
 import { InjectModel } from "@nestjs/sequelize";
-import { Role } from "../roles/roles.model";
 import { logs_bot } from "../logs_bot/logs_bot.model";
-import { CreateRoleDto } from "../roles/dto/create-role.dto";
-import { CreateLogsDto } from "../logs_bot/dto/create-logs.dto";
+import { ChatCompletionApiService } from "../chat-completion-api/chat-completion-api.service";
+import {
+  GetChatCompletionAnswerInputDTO,
+  GetChatCompletionAnswerOutputDTO
+} from "../chat-completion-api/model/chat-completion.answer.dto";
 
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -15,7 +16,7 @@ const WebAppUrl = 'https://ubiquitous-trifle-97a24d.netlify.app/';
 export class BotService {
   private readonly bot: any;
   private logger = new Logger(BotService.name);
-  constructor(@InjectModel(logs_bot) private logs_botRepository: typeof logs_bot) {
+  constructor(@InjectModel(logs_bot) private logs_botRepository: typeof logs_bot, private readonly gpt: ChatCompletionApiService) {
     let token = process.env.TOKEN;
 
     let bot = new TelegramBot(token, { polling: true });
@@ -36,15 +37,21 @@ export class BotService {
           };
           let text;
           if (action === 'edit') {
-            text = 'Edited Text';
+            text = '';
           }
 
           if (action === 'Привет') {
             text = 'Вы выбрали текст "Привет';
+          new ValidationPipe({transform: true})
+            const resp = new GetChatCompletionAnswerInputDTO();
+            resp.message = action;
+            let otvet = new GetChatCompletionAnswerOutputDTO();
+
+            otvet =  await gpt.getAiModelAnswer(resp);
+            await bot.editMessageText(otvet.aiMessage, opts);
           }
-          console.log(opts.chat_id, opts.message_id, text);
           await logs_botRepository.create(opts);
-          await bot.editMessageText( text, opts );
+          //await bot.editMessageText( text, opts );
         }
     );
 

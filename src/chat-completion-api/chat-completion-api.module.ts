@@ -4,6 +4,7 @@ import { ChatCompletionApiController } from './chat-completion-api.controller';
 
 @Module({
   providers: [ChatCompletionApiService],
-  controllers: [ChatCompletionApiController]
+  controllers: [],
+  exports: [ChatCompletionApiService]
 })
 export class ChatCompletionApiModule {}

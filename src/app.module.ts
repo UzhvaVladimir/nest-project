@@ -11,6 +11,7 @@ import { UserRoles } from "./roles/user-roles.model";
 import {BotsModule} from "./bots/bots.module";
 import { LogsBotModule } from './logs_bot/logs_bot.module';
 import { ChatCompletionApiModule } from './chat-completion-api/chat-completion-api.module';
+import { FsmModule } from './fsm/fsm.module';
 
 
 @Module({
@@ -42,6 +43,7 @@ import { ChatCompletionApiModule } from './chat-completion-api/chat-completion-a
     BotsModule,
     LogsBotModule,
     ChatCompletionApiModule,
+    FsmModule,
   ],
   controllers: [],
   providers: [],
