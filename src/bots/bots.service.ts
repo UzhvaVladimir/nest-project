@@ -10,107 +10,83 @@ import {
 
 const TelegramBot = require('node-telegram-bot-api');
 
+const bb = require('bot-brother');
+
+
 const WebAppUrl = 'https://ubiquitous-trifle-97a24d.netlify.app/';
 
 @Injectable()
 export class BotService {
   private readonly bot: any;
   private logger = new Logger(BotService.name);
-  constructor(@InjectModel(logs_bot) private logs_botRepository: typeof logs_bot, private readonly gpt: ChatCompletionApiService) {
-    let token = process.env.TOKEN;
+  constructor(@InjectModel(logs_bot) private logs_botRepository: typeof logs_bot,
+              private readonly gpt: ChatCompletionApiService) {
+      let token = process.env.TOKEN;
 
-    let bot = new TelegramBot(token, { polling: true });
+      //let bot = new TelegramBot(token, {polling: true});
+      let bot_bb = bb({
+          key: token,
+          sessionManager: bb.sessionManager.memory(),
+          polling: {interval: 0, timeout: 1},
+      });
 
-    bot.on('message', this.onReceiveMessage);
-
-    bot.on('callback_query', async function onCallbackQuery(e) {
-          const action = e.data;
-          const msg = e.message;
-          console.log(msg, action);
-
+      // This callback cathes all commands.
+      bot_bb.command(/.*/).use('before', async function (ctx) {
+          console.log(ctx.meta, ctx.message);
           const opts = {
-            chat_id: msg.chat.id,
-            message: action,
-            message_id: msg.message_id,
-            type: 'callback_query',
-            first_name: msg.chat.first_name
-          };
-          let text;
-          if (action === 'edit') {
-            text = '';
+              chat_id: ctx.meta.from.id as string,
+              message: ctx.message.text as string,
+              type: 'message',
+              first_name: ctx.meta.from.first_name
           }
 
-          if (action === 'Привет') {
-            text = 'Вы выбрали текст "Привет';
-          new ValidationPipe({transform: true})
-            const resp = new GetChatCompletionAnswerInputDTO();
-            resp.message = action;
-            let otvet = new GetChatCompletionAnswerOutputDTO();
-
-            otvet =  await gpt.getAiModelAnswer(resp);
-            await bot.editMessageText(otvet.aiMessage, opts);
-          }
           await logs_botRepository.create(opts);
-          //await bot.editMessageText( text, opts );
-        }
-    );
+      })
 
-    ///
-    bot.onText(/\/edit/, function onEditableText(msg){
-      const opts = {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: 'Edit Text',
-                // we shall check for this value when we listen
-                // for "callback_query"
-                callback_data: 'edit'
-              }
-            ]
-          ]
-        }
-      };
-        bot.sendMessage(msg.from.id, 'Original Text', opts);
-    });
+      bot_bb.command('help')
+          .invoke(function (ctx) {
+              // Setting data, data is used in text message templates.
+              ctx.data.user = ctx.meta.user;
+              // Invoke callback must return promise.
+              return ctx.sendMessage('Боту пока доступна одна функция, по команде /gptchat - общение с искуственным интелектом');
+          })
+          .answer(function (ctx) {
+              ctx.data.answer = ctx.answer;
+              // Returns promise.
+              return ctx.sendMessage('OK. /start, /gptchat, или /help');
+          });
 
-    ///
-    bot.on('message', async (msg) => {
-      const chatId = msg.chat.id;
-      const textMessage = msg.text;
+      bot_bb.command('start')
+          .invoke(function (ctx) {
+              // Setting data, data is used in text message templates.
+              ctx.data.user = ctx.meta.user;
+              // Invoke callback must return promise.
+              return ctx.sendMessage('Привет <%=user.first_name%>. Чтобы ознакомиться с возможностями бота введите команду: /help?');
+          })
+          .answer(function (ctx) {
+              ctx.data.answer = ctx.answer;
+              // Returns promise.
+              return ctx.sendMessage('OK. /start, /gptchat, или /help');
+          });
 
-      if (textMessage === '/start') {
-        // send a message to the chat acknowledging receipt of their message
-        await bot.sendMessage(
-          chatId,
-          'Заполни форму, которая появится ниже',
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: 'Кнопка', web_app: { url: WebAppUrl } },
-                 { text: 'Кнопка №1', callback_data: 'Привет'}],
-              ],
-            },
-          },
-        );
-      }
-    });
-  }
+      bot_bb.command('gptchat')
+          .invoke(function (ctx) {
+              // Setting data, data is used in text message templates.
+              ctx.data.user = ctx.meta.user;
+              // Invoke callback must return promise.
+              return ctx.sendMessage('Ты можешь задавать вопросы искусственному интелекту.');
+          })
+          .answer(async function (ctx) {
+              ctx.data.answer = ctx.answer;
+              //
+              new ValidationPipe({transform: true})
+              const resp = new GetChatCompletionAnswerInputDTO();
+              resp.message = ctx.answer;
+              let otvet = new GetChatCompletionAnswerOutputDTO();
+              otvet = await gpt.getAiModelAnswer(resp);
 
-  onReceiveMessage = (msg: any) => {
-    const opts = {
-        chat_id: msg.chat.id as string,
-        message: msg.text as string,
-        type: 'message',
-        first_name: msg.chat.first_name
-      }
-    this.logger.debug(msg);
-    console.log(opts.chat_id, opts.message )
-    this.createLogs(opts);
-  };
-
-  async createLogs(dto){
-    const logs = await this.logs_botRepository.create(dto);
-    return logs;
+              //await bot.editMessageText(otvet.aiMessage, opts);
+              return ctx.sendMessage( otvet.aiMessage );
+          });
   }
 }
